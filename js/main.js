@@ -1,5 +1,5 @@
 /* jshint browser: true, devel: true, indent: 2, curly: true, eqeqeq: true, futurehostile: true, latedef: true, undef: true, unused: true */
-/* global jQuery, $, document, Site, Modernizr */
+/* global jQuery, $, document, Site, L */
 
 Site = {
   mobileThreshold: 601,
@@ -29,7 +29,7 @@ Site = {
 };
 
 Site.Map = {
-  map,
+  map: null,
   pos: {
     lat: 0,
     long: 0
@@ -94,7 +94,7 @@ Site.Map = {
       _this.coordinateArray = [];
     }).on('mousedown', function() {
       _this.map.on("mousemove", function(e) {
-        _this.trackMouse(e)
+        _this.trackMouse(e);
       });
     });
   },
@@ -167,7 +167,7 @@ Site.Map = {
       $('.leaflet-tile-container').toggleClass('u-invisible');
     });
   }
-}
+};
 
 jQuery(document).ready(function () {
   'use strict';
