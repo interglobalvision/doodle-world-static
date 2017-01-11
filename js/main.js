@@ -30,38 +30,58 @@ Site = {
 
 Site.Map = {
   map,
+  pos: {
+    lat: 0,
+    long: 0
+  },
   coordinateArray: [],
 
   init: function() {
     var _this = this;
 
-    _this.map = L.map('map', {
-      dragging: false
-    }).setView([0, 0], 2);
+    _this.map = L.map('map').setView([0, 0], 2);
 
     _this.tileMap();
 
-    _this.flyToDevicePos();
+    if (navigator.geolocation) {
 
-    _this.draw();
+      _this.flyToDevicePos();
+
+    } else {
+      alert('your browser sucks');
+    }
   },
 
   tileMap: function() {
     var _this = this;
 
-    L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw', {
+    var tileLayer = L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw', {
       maxZoom: 20,
       id: 'mapbox.streets'
     }).addTo(_this.map);
   },
 
-  flyToDevicePos: function() {
+  getDevicePos: function(callback) {
     var _this = this;
 
     navigator.geolocation.getCurrentPosition(function(position) {
-      _this.map.flyTo([position.coords.latitude, position.coords.longitude], 20, {
+      _this.pos.lat = position.coords.latitude;
+      _this.pos.long = position.coords.longitude;
+
+      callback();
+    });
+  },
+
+  flyToDevicePos: function() {
+    var _this = this;
+
+    _this.getDevicePos(function() {
+      _this.map.flyTo([_this.pos.lat, _this.pos.long], 20, {
         animate: true
       });
+
+      _this.stateDraw();
+      _this.bindStates();
     });
   },
 
@@ -83,6 +103,69 @@ Site.Map = {
     var _this = this;
 
     _this.coordinateArray.push([e.latlng.lat, e.latlng.lng]);
+  },
+
+  stateDraw: function() {
+    var _this = this;
+
+    $('#draw').prop('disabled', true);
+    $('#move').prop('disabled', false);
+    _this.map.locate({
+      watch: true,
+      setView: true
+    });
+    _this.moveDisable();
+    _this.draw();
+  },
+
+  stateMove: function() {
+    var _this = this;
+    
+    $('#draw').prop('disabled', false);
+    $('#move').prop('disabled', true);
+    _this.map.stopLocate();
+    _this.moveEnable();
+    _this.map.off('mouseup mousedown');
+  },
+
+  moveDisable: function() {
+    var _this = this;
+
+    _this.map.dragging.disable();
+    _this.map.touchZoom.disable();
+    _this.map.doubleClickZoom.disable();
+    _this.map.scrollWheelZoom.disable();
+    _this.map.boxZoom.disable();
+    _this.map.keyboard.disable();
+    _this.map.zoomControl.disable();
+  },
+
+  moveEnable: function() {
+    var _this = this;
+
+    _this.map.dragging.enable();
+    _this.map.touchZoom.enable();
+    _this.map.doubleClickZoom.enable();
+    _this.map.scrollWheelZoom.enable();
+    _this.map.boxZoom.enable();
+    _this.map.keyboard.enable();
+    _this.map.zoomControl.enable();
+  },
+
+  bindStates: function() {
+    var _this = this;
+
+    $('#move').on('click', function() {
+      _this.stateMove();
+    });
+
+    $('#draw').on('click', function() {
+      _this.stateDraw();
+    });
+
+    $('#toggle-map').on('click', function() {
+      $('.leaflet-tile-container').toggleClass('u-invisible');
+    });
   }
 }
 
